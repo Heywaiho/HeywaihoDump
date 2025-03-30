@@ -1,0 +1,37 @@
+terraform {
+ required_providers {
+ azurerm = {
+ source = "hashicorp/azurerm"
+ version = "~> 3.0.2"
+ }
+ }
+ required_version = ">= 1.1.0"
+}
+
+provider "azurerm" {
+ features {}
+}
+
+# Define a list of Resource Groups
+variable "resource_groups" {
+ type = list(object({ name = string, location = string }))
+ default = [
+ { name = "RG-Dev", location = "East US 2" },
+ { name = "RG-Test", location = "West US" },
+ { name = "RG-Staging", location = "Central US" },
+ { name = "RG-Prod", location = "North Europe" }
+ ]
+}
+
+# Create multiple Resource Groups using for_each
+resource "azurerm_resource_group" "rg" {
+ for_each = { for rg in var.resource_groups : rg.name => rg }
+
+ name = each.value.name
+ location = each.value.location
+
+ tags = {
+ Environment = each.value.name
+ ManagedBy = "Terraform"
+ }
+}
